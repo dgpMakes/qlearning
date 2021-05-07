@@ -1,0 +1,10 @@
+@RELATION pacman-data
+
+@ATTRIBUTE is_any_ghost_within_reach {False,True}
+@ATTRIBUTE is_any_food_nearby {False,True}
+
+@ATTRIBUTE score NUMERIC
+@ATTRIBUTE scoreSiguiente NUMERIC
+
+@data
+

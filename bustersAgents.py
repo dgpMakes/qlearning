@@ -1,8 +1,21 @@
 from __future__ import print_function
+from wekaI import Weka
+import numpy
+
 # bustersAgents.py
 # ----------------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
-from builtins import str
+
 from builtins import range
 from builtins import object
 import util
@@ -60,6 +73,8 @@ class BustersAgent(object):
     "An agent that tracks and displays its beliefs about ghost positions."
 
     def __init__( self, index = 0, inference = "ExactInference", ghostAgents = None, observeEnable = True, elapseTimeEnable = True):
+        self.weka = Weka()
+        self.weka.start_jvm()
         inferenceType = util.lookup(inference, globals())
         self.inferenceModules = [inferenceType(a) for a in ghostAgents]
         self.observeEnable = observeEnable
@@ -82,14 +97,14 @@ class BustersAgent(object):
 
     def getAction(self, gameState):
         "Updates beliefs, then chooses an action based on updated beliefs."
-        for index, inf in enumerate(self.inferenceModules):
-            if not self.firstMove and self.elapseTimeEnable:
-                inf.elapseTime(gameState)
-            self.firstMove = False
-            if self.observeEnable:
-                inf.observeState(gameState)
-            self.ghostBeliefs[index] = inf.getBeliefDistribution()
-        self.display.updateDistributions(self.ghostBeliefs)
+        #for index, inf in enumerate(self.inferenceModules):
+        #    if not self.firstMove and self.elapseTimeEnable:
+        #        inf.elapseTime(gameState)
+        #    self.firstMove = False
+        #    if self.observeEnable:
+        #        inf.observeState(gameState)
+        #    self.ghostBeliefs[index] = inf.getBeliefDistribution()
+        #self.display.updateDistributions(self.ghostBeliefs)
         return self.chooseAction(gameState)
 
     def chooseAction(self, gameState):
@@ -107,7 +122,89 @@ class BustersKeyboardAgent(BustersAgent, KeyboardAgent):
         return BustersAgent.getAction(self, gameState)
 
     def chooseAction(self, gameState):
-        return KeyboardAgent.getAction(self, gameState)
+        q = KeyboardAgent.getAction(self, gameState)
+        return q
+
+    def printLineData(self, gameState, mode=1):
+
+        # Skip initial frames with the Stop direction
+        if gameState.data.agentStates[0].getDirection() == "Stop": 
+            return ""
+
+        # Direccion al fantasma mas cercano
+        is_at_north = False
+        is_at_south = False
+        is_at_east = False
+        is_at_west = False
+
+        nearest_ghost_index = gameState.data.ghostDistances.index(min(i for i in gameState.data.ghostDistances if i is not None))
+
+        nearest_ghost_x_position = gameState.getGhostPositions()[nearest_ghost_index][0]
+        nearest_ghost_y_position = gameState.getGhostPositions()[nearest_ghost_index][1]
+
+        print("x -> " + str(nearest_ghost_x_position))
+        print("y -> " + str(nearest_ghost_y_position))
+
+
+        pacman_x_pos = gameState.getPacmanPosition()[0]
+        pacman_y_pos = gameState.getPacmanPosition()[1]
+
+        relative_x_pos = nearest_ghost_x_position - pacman_x_pos
+        relative_y_pos = nearest_ghost_y_position - pacman_y_pos
+
+        if relative_y_pos > 0:
+            is_at_north = True
+        if relative_y_pos < 0:
+            is_at_south = True
+        if relative_x_pos > 0:
+            is_at_east = True
+        if relative_x_pos < 0:
+            is_at_west = True
+
+        print("N -> " + str(is_at_north))
+        print("S -> " + str(is_at_south))
+        print("E -> " + str(is_at_east))
+        print("W -> " + str(is_at_west))
+
+        if mode == 1:
+
+            return (
+
+                str("North" in gameState.getLegalPacmanActions()) + # Can go North
+                "," + str("South" in gameState.getLegalPacmanActions()) + # Can go South
+                "," + str("East" in gameState.getLegalPacmanActions()) + # Can go East
+                "," + str("West" in gameState.getLegalPacmanActions()) + # Can go West
+
+
+                "," + str(is_at_north) + # Is at the north
+                "," + str(is_at_south) + # Is at the south
+                "," + str(is_at_east) + # Is at the east
+                "," + str(is_at_west) + # Is at the west
+        
+                "," + str(gameState.data.agentStates[0].getDirection()) + # Actions by PacMan
+                "\n" 
+
+            )
+
+        elif mode == 2:
+
+            is_any_ghost_within_reach = (abs(relative_y_pos) == 1 and abs(relative_x_pos) == 0) or (abs(relative_y_pos) == 0 and abs(relative_x_pos) == 1)
+            is_any_food_nearby = gameState.getDistanceNearestFood() == 1
+
+            return (
+
+                str(gameState.getScore()) + "\n" + # score
+
+                str(is_any_ghost_within_reach) + # if there is a ghost nearby
+                "," + str(is_any_food_nearby) + # if there is a dot to eat nearby
+
+                "," + str(gameState.getScore()) + "," # scoreSiguiente
+
+            )
+
+
+
+
 
 from distanceCalculator import Distancer
 from game import Actions
@@ -141,56 +238,73 @@ class RandomPAgent(BustersAgent):
         table = table[:-1]
         return table
         
-    def printLineData(self,gameState):
-    
-        '''Observations of the state
-        
-        print(str(gameState.livingGhosts))
-        print(gameState.data.agentStates[0])
-        print(gameState.getNumFood())
-        print (gameState.getCapsules())
-        width, height = gameState.data.layout.width, gameState.data.layout.height
-        print(width, height)
-        print(gameState.data.ghostDistances)
-        print(gameState.data.layout)'''
-      
-        '''END Observations of the state'''
-        
-        print(gameState)
-        
-        weka_line = ""
-        for i in gameState.livingGhosts:
-            weka_line = weka_line + str(i) + ","
-        weka_line = weka_line + str(gameState.getNumFood()) + "," 
-        for i in gameState.getCapsules():
-            weka_line = weka_line + str(i[0]) + "," + str(i[1]) + ","
-        for i in gameState.data.ghostDistances:
-            weka_line = weka_line + str(i) + ","
-        weka_line = weka_line + str(gameState.data.score) + "," +\
-        str(len(gameState.data.capsules))  + "," + str(self.countFood(gameState)) +\
-        "," + str(gameState.data.agentStates[0].configuration.pos[0]) + "," +\
-        str(gameState.data.agentStates[0].configuration.pos[0])  +\
-        "," + str(gameState.data.agentStates[0].scaredTimer) + "," +\
-        self.printGrid(gameState) + "," +\
-        str(gameState.data.agentStates[0].numReturned) + "," +\
-        str(gameState.data.agentStates[0].getPosition()[0]) + "," +\
-        str(gameState.data.agentStates[0].getPosition()[1])+ "," +\
-        str(gameState.data.agentStates[0].numCarrying)+ "," +\
-        str(gameState.data.agentStates[0].getDirection())
-        print(weka_line)
-        
-        
     def chooseAction(self, gameState):
         move = Directions.STOP
         legal = gameState.getLegalActions(0) ##Legal position from the pacman
         move_random = random.randint(0, 3)
-        self.printLineData(gameState)
         if   ( move_random == 0 ) and Directions.WEST in legal:  move = Directions.WEST
         if   ( move_random == 1 ) and Directions.EAST in legal: move = Directions.EAST
         if   ( move_random == 2 ) and Directions.NORTH in legal:   move = Directions.NORTH
         if   ( move_random == 3 ) and Directions.SOUTH in legal: move = Directions.SOUTH
         return move
-        
+
+
+class WekaAgent(BustersAgent, KeyboardAgent):
+
+    def __init__(self, index = 0, inference = "KeyboardInference", ghostAgents = None):
+        KeyboardAgent.__init__(self, index)
+        BustersAgent.__init__(self, index, inference, ghostAgents)
+
+    def getAction(self, gameState):
+        return BustersAgent.getAction(self, gameState)
+
+    def chooseAction(self, gameState):  
+
+        # Direccion al fantasma mas cercano
+        is_at_north = False
+        is_at_south = False
+        is_at_east = False
+        is_at_west = False
+
+        nearest_ghost_index = gameState.data.ghostDistances.index(min(i for i in gameState.data.ghostDistances if i is not None))
+
+        nearest_ghost_x_position = gameState.getGhostPositions()[nearest_ghost_index][0]
+        nearest_ghost_y_position = gameState.getGhostPositions()[nearest_ghost_index][1]
+
+        pacman_x_pos = gameState.getPacmanPosition()[0]
+        pacman_y_pos = gameState.getPacmanPosition()[1]
+
+        relative_x_pos = nearest_ghost_x_position - pacman_x_pos
+        relative_y_pos = nearest_ghost_y_position - pacman_y_pos
+
+        if relative_y_pos > 0:
+            is_at_north = True
+        if relative_y_pos < 0:
+            is_at_south = True
+        if relative_x_pos > 0:
+            is_at_east = True
+        if relative_x_pos < 0:
+            is_at_west = True
+
+
+        x = [
+        str("North" in gameState.getLegalPacmanActions()),
+        str("South" in gameState.getLegalPacmanActions()),
+        str("East" in gameState.getLegalPacmanActions()),
+        str("West" in gameState.getLegalPacmanActions()),
+        str(is_at_north),
+        str(is_at_south),
+        str(is_at_east),
+        str(is_at_west)
+        ]
+        print(x)
+        import os
+        wekapath = os.environ['WEKAPATH']
+        move = self.weka.predict(wekapath + "/model.model", x, wekapath + "/data.arff", debug=False)
+        print(move)
+        return move
+
+
 class GreedyBustersAgent(BustersAgent):
     "An agent that charges the closest ghost."
 
@@ -233,5 +347,374 @@ class GreedyBustersAgent(BustersAgent):
         livingGhostPositionDistributions = \
             [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
              if livingGhosts[i+1]]
-        "*** YOUR CODE HERE ***"
         return Directions.EAST
+
+class BasicAgentAA(BustersAgent):
+
+    def registerInitialState(self, gameState):
+        BustersAgent.registerInitialState(self, gameState)
+        self.distancer = Distancer(gameState.data.layout, False)
+        self.countActions = 0
+        
+    ''' Example of counting something'''
+    def countFood(self, gameState):
+        food = 0
+        for width in gameState.data.food:
+            for height in width:
+                if(height == True):
+                    food = food + 1
+        return food
+    
+    ''' Print the layout'''  
+    def printGrid(self, gameState):
+        table = ""
+        #print(gameState.data.layout) ## Print by terminal
+        for x in range(gameState.data.layout.width):
+            for y in range(gameState.data.layout.height):
+                food, walls = gameState.data.food, gameState.data.layout.walls
+                table = table + gameState.data._foodWallStr(food[x][y], walls[x][y]) + ","
+        table = table[:-1]
+        return table
+
+    def printInfo(self, gameState):
+        print("---------------- TICK ", self.countActions, " --------------------------")
+        # Map size
+        width, height = gameState.data.layout.width, gameState.data.layout.height
+        print("Width: ", width, " Height: ", height)
+        # Pacman position
+        print("Pacman position: ", gameState.getPacmanPosition())
+        # Legal actions for Pacman in current position
+        print("Legal actions: ", gameState.getLegalPacmanActions())
+        # Pacman direction
+        print("Pacman direction: ", gameState.data.agentStates[0].getDirection())
+        # Number of ghosts
+        print("Number of ghosts: ", gameState.getNumAgents() - 1)
+        # Alive ghosts (index 0 corresponds to Pacman and is always false)
+        print("Living ghosts: ", gameState.getLivingGhosts())
+        # Ghosts positions
+        print("Ghosts positions: ", gameState.getGhostPositions())
+        # Ghosts directions
+        print("Ghosts directions: ", [gameState.getGhostDirections().get(i) for i in range(0, gameState.getNumAgents() - 1)])
+        # Manhattan distance to ghosts
+        print("Ghosts distances: ", gameState.data.ghostDistances)
+        # Pending pac dots
+        print("Pac dots: ", gameState.getNumFood())
+        # Manhattan distance to the closest pac dot
+        print("Distance nearest pac dots: ", gameState.getDistanceNearestFood())
+        # Map walls
+        print("Map:")
+        print( gameState.getWalls())
+        # Score
+        print("Score: ", gameState.getScore())
+        
+    def printLineData(self, gameState, mode=1):
+
+        # Skip initial frames with the Stop direction
+        if gameState.data.agentStates[0].getDirection() == "Stop": 
+            return ""
+
+        # Direccion al fantasma mas cercano
+        is_at_north = False
+        is_at_south = False
+        is_at_east = False
+        is_at_west = False
+
+        nearest_ghost_index = gameState.data.ghostDistances.index(min(i for i in gameState.data.ghostDistances if i is not None))
+
+        nearest_ghost_x_position = gameState.getGhostPositions()[nearest_ghost_index][0]
+        nearest_ghost_y_position = gameState.getGhostPositions()[nearest_ghost_index][1]
+
+        print("x -> " + str(nearest_ghost_x_position))
+        print("y -> " + str(nearest_ghost_y_position))
+
+
+        pacman_x_pos = gameState.getPacmanPosition()[0]
+        pacman_y_pos = gameState.getPacmanPosition()[1]
+
+        relative_x_pos = nearest_ghost_x_position - pacman_x_pos
+        relative_y_pos = nearest_ghost_y_position - pacman_y_pos
+
+        if relative_y_pos > 0:
+            is_at_north = True
+        if relative_y_pos < 0:
+            is_at_south = True
+        if relative_x_pos > 0:
+            is_at_east = True
+        if relative_x_pos < 0:
+            is_at_west = True
+
+        print("N -> " + str(is_at_north))
+        print("S -> " + str(is_at_south))
+        print("E -> " + str(is_at_east))
+        print("W -> " + str(is_at_west))
+
+        if mode == 1:
+
+            return (
+
+                str("North" in gameState.getLegalPacmanActions()) + # Can go North
+                "," + str("South" in gameState.getLegalPacmanActions()) + # Can go South
+                "," + str("East" in gameState.getLegalPacmanActions()) + # Can go East
+                "," + str("West" in gameState.getLegalPacmanActions()) + # Can go West
+
+
+                "," + str(is_at_north) + # Is at the north
+                "," + str(is_at_south) + # Is at the south
+                "," + str(is_at_east) + # Is at the east
+                "," + str(is_at_west) + # Is at the west
+        
+                "," + str(gameState.data.agentStates[0].getDirection()) + # Actions by PacMan
+                "\n" 
+
+            )
+
+        elif mode == 2:
+
+            is_any_ghost_within_reach = (abs(relative_y_pos) == 1 and abs(relative_x_pos) == 0) or (abs(relative_y_pos) == 0 and abs(relative_x_pos) == 1)
+            is_any_food_nearby = gameState.getDistanceNearestFood() == 1
+
+            return (
+
+                str(gameState.getScore()) + "\n" + # score
+
+                str(is_any_ghost_within_reach) + # if there is a ghost nearby
+                "," + str(is_any_food_nearby) + # if there is a dot to eat nearby
+
+                "," + str(gameState.getScore()) + "," # scoreSiguiente
+
+            )
+
+    def chooseAction(self, gameState):
+        self.countActions = self.countActions + 1
+        self.printInfo(gameState)
+        move = Directions.STOP
+        legal = gameState.getLegalActions(0) ##Legal position from the pacman+
+
+        distancer = Distancer(gameState.data.layout)
+
+
+        # Move towards the nearest ghost
+
+        pos_pacman = gameState.getPacmanPosition()
+        ghost_to_follow = 0
+        nearest_distance = 999999999999999
+
+        # Look which ghost is closer
+        for i in range(0, len(gameState.getGhostPositions())):
+            distance_to_analyze = distancer.getDistance((pos_pacman[0], pos_pacman[1]),(gameState.getGhostPositions()[i][0], gameState.getGhostPositions()[i][1]))
+            if gameState.getLivingGhosts()[i+1] and distance_to_analyze < nearest_distance:
+                ghost_to_follow = i
+                nearest_distance = distance_to_analyze
+
+        # Look how to approach the ghost
+        valid_directions = legal
+        if "Stop" in valid_directions:
+            valid_directions.remove("Stop")
+        
+        # Analyze which direction is better
+        current_best_distance = 99999999999999
+        current_direction = None
+
+        for direction in valid_directions:
+            pacman_position = (pos_pacman[0], pos_pacman[1])
+
+            if direction is Directions.NORTH:
+                pacman_position = (pos_pacman[0], pos_pacman[1] + 1)
+            elif direction is Directions.SOUTH:
+                pacman_position = (pos_pacman[0], pos_pacman[1] - 1)   
+            elif direction is Directions.WEST:
+                pacman_position = (pos_pacman[0] - 1, pos_pacman[1])               
+            elif direction is Directions.EAST:
+                pacman_position = (pos_pacman[0] + 1, pos_pacman[1])   
+            
+            resulting_distance = distancer.getDistance(pacman_position,
+                (gameState.getGhostPositions()[ghost_to_follow][0], gameState.getGhostPositions()[ghost_to_follow][1]))
+
+            if resulting_distance < current_best_distance:
+                current_direction = direction
+                current_best_distance = resulting_distance
+
+        return current_direction
+
+
+class QLearningAgent(BustersAgent):
+    
+    def registerInitialState(self, gameState)
+        self.distancer = Distancer(gameState.data.layout, False)
+        self.epsilon = 0.0
+        self.alpha = 0.5
+        self.discount = 0.8
+        self.actions = {"North=":0, "East=":1, "South=":2, "West=":3}
+        if os.path.exists("qtable.txt")
+            self.table_file = open("qtable.txt", "r+")
+            self.q_table = self.readQtable()
+        else:
+            self.table_file = open("qtable.txt","w+")
+            self.initializeQtable(9) #argumento indica cuantos estados hay
+    
+    def initializeQtable(self, nrows):
+        self.q_table = np.zeros(nrows,len(self.actions))
+
+    def readQtable(self):
+        "Read qtable from disc"
+        table = self.table_file.readlines()
+        q_table = []
+
+        for i, line in enumerate(table):
+            row = line.split()
+            row = [float(x) for x in row]
+            q_table.append(row)
+
+        return q_table
+
+    def writeQtable(self):
+        "Write qtable to disc"
+        self.table_file.seek(0)
+        self.table_file.truncate()
+        for line in self.q_table:
+            for item in line:
+                self.table_file.write(str(item)+" ")
+            self.table_file.write("\n")
+            
+    def printQtable(self):
+        "Print qtable"
+        for line in self.q_table:
+            print(line)
+        print("\n")    
+            
+    def __del__(self):
+        "Destructor. Invokation at the end of each episode"
+        self.writeQtable()
+        self.table_file.close()
+
+    def computePosition(self, state):
+        """
+        Compute the row of the qtable for a given state.
+        For instance, the state (3,1) is the row 7
+        """
+        return state[0]+state[1]*4
+
+    def getQValue(self, state, action):
+
+        """
+          Returns Q(state,action)
+          Should return 0.0 if we have never seen a state
+          or the Q node value otherwise
+        """
+        position = self.computePosition(state)
+        action_column = self.actions[action]
+
+        return self.q_table[position][action_column]
+
+
+    def computeValueFromQValues(self, state):
+        """
+          Returns max_action Q(state,action)
+          where the max is over legal actions.  Note that if
+          there are no legal actions, which is the case at the
+          terminal state, you should return a value of 0.0.
+        """
+        legalActions = state.getLegalActions()
+        if 'Stop' in legalActions: legalActions.remove("Stop")
+        if len(legalActions)==0:
+          return 0
+        return max(self.q_table[self.computePosition(state)])
+
+    def computeActionFromQValues(self, state):
+        print("computeAction()")
+
+        """
+          Compute the best action to take in a state.  Note that if there
+          are no legal actions, which is the case at the terminal state,
+          you should return None.
+        """
+        legalActions = self.getLegalActions(state)
+        if len(legalActions)==0:
+          return None
+
+        best_actions = [legalActions[0]]
+        best_value = self.getQValue(state, legalActions[0])
+        for action in legalActions:
+            value = self.getQValue(state, action)
+            if value == best_value:
+                best_actions.append(action)
+            if value > best_value:
+                best_actions = [action]
+                best_value = value
+
+        return random.choice(best_actions)
+
+    def getAction(self, state):
+        """
+          Compute the action to take in the current state.  With
+          probability self.epsilon, we should take a random action and
+          take the best policy action otherwise.  Note that if there are
+          no legal actions, which is the case at the terminal state, you
+          should choose None as the action.
+        """
+        # Pick Action
+        legalActions = self.getLegalActions(state)
+        action = None
+
+        if len(legalActions) == 0:
+             return action
+
+        flip = util.flipCoin(self.epsilon)
+
+        if flip:
+            return random.choice(legalActions)
+        return self.getPolicy(state)
+
+
+    def update(self, state, action, nextState, reward):
+        """
+        The parent class calls this to observe a
+        state = action => nextState and reward transition.
+        You should do your Q-Value update here
+
+        Good Terminal state -> reward 1
+        Bad Terminal state -> reward -1
+        Otherwise -> reward 0
+
+        Q-Learning update:
+
+        if terminal_state:
+        Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + 0)
+        else:
+        Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + self.discount * max a' Q(nextState, a'))
+
+        """
+        # TRACE for transition and position to update. Comment the following lines if you do not want to see that trace
+#         print("Update Q-table with transition: ", state, action, nextState, reward)
+#         position = self.computePosition(state)
+#         action_column = self.actions[action]
+#         print("Corresponding Q-table cell to update:", position, action_column)
+
+        
+        
+        "*** YOUR CODE HERE ***"
+        currentValue = self.getQValue(state, action)
+        nextValue = self.getValue(nextState)
+        discount = self.discount
+        alpha = self.alpha
+
+        
+        result = alpha * (reward + nextValue * discount - currentValue) + currentValue
+        self.q_table[self.computePosition(state)][self.actions[action]] = result
+
+        # TRACE for updated q-table. Comment the following lines if you do not want to see that trace
+#         print("Q-table:")
+#         self.printQtable()
+
+    def getPolicy(self, state):
+        "Return the best action in the qtable for a given state"
+        return self.computeActionFromQValues(state)
+
+    def getValue(self, state):
+        "Return the highest q value for a given state"
+        return self.computeValueFromQValues(state)
+
+    def getReward(self, state, action, nextState):
+        "Return the obtained reward"
+
+

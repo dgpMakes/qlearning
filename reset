@@ -1,0 +1,4 @@
+rm score_pacman_data.arff
+rm noscore_pacman_data.arff
+cp noscore_header.txt noscore_pacman_data.arff
+cp score_header.txt score_pacman_data.arff

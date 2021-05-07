@@ -1,6 +1,15 @@
 # distanceCalculator.py
 # ---------------------
-
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
 """
@@ -20,10 +29,13 @@ examples may help you in designing your own objects, but you
 shouldn't need to modify the Distancer code in order to use its
 distances.
 """
+from __future__ import print_function
 
+from builtins import str
+from builtins import object
 import threading, sys, time, random
 
-class Distancer:
+class Distancer(object):
   def __init__(self, layout, background=True, default=10000):
     """
     Initialize with Distancer(layout).  Changing default is unnecessary.
