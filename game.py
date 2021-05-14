@@ -734,6 +734,8 @@ class Game(object):
 
             if _BOINC_ENABLED:
                 boinc.set_fraction_done(self.getProgress())
+        
+
 
 
         # inform a learning agent of the game result

@@ -551,11 +551,12 @@ class QLearningAgent(BustersAgent):
         else:
             self.table_file = open("qtable.txt","w+")
             width = gameState.data.layout.width
-            height = gameState.data.layout.heigh
+            height = gameState.data.layout.height
+            print(width*height)
             self.initializeQtable(width * height) #argumento indica cuantos estados hay
     
     def initializeQtable(self, nrows):
-        self.q_table = np.zeros(nrows,len(self.actions))
+        self.q_table = np.zeros((nrows,len(self.actions)))
 
     def readQtable(self):
         "Read qtable from disc"
@@ -571,11 +572,14 @@ class QLearningAgent(BustersAgent):
 
     def writeQtable(self):
         "Write qtable to disc"
+        print("hola me llamo diego")
         self.table_file.seek(0)
         self.table_file.truncate()
         for line in self.q_table:
+            print("line -> " + line)
             for item in line:
                 self.table_file.write(str(item)+" ")
+                print(item)
             self.table_file.write("\n")
             
     def printQtable(self):
@@ -587,6 +591,7 @@ class QLearningAgent(BustersAgent):
     def __del__(self):
         "Destructor. Invokation at the end of each episode"
         self.writeQtable()
+        print("__del__ ha sido llamado")
         self.table_file.close()
 
     def computePosition(self, gameState):
