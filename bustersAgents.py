@@ -544,16 +544,15 @@ class QLearningAgent(BustersAgent):
         self.alpha = 0.5
         self.discount = 0.8
 
-        if "Stop" in self.actions:
-            self.actions.remove("Stop")
-
         self.actions = {"North":0, "East":1, "South":2, "West":3}
         if os.path.exists("qtable.txt"):
             self.table_file = open("qtable.txt", "r+")
             self.q_table = self.readQtable()
         else:
             self.table_file = open("qtable.txt","w+")
-            self.initializeQtable(16) #argumento indica cuantos estados hay
+            width = gameState.data.layout.width
+            height = gameState.data.layout.heigh
+            self.initializeQtable(width * height) #argumento indica cuantos estados hay
     
     def initializeQtable(self, nrows):
         self.q_table = np.zeros(nrows,len(self.actions))
@@ -592,9 +591,12 @@ class QLearningAgent(BustersAgent):
 
     def computePosition(self, gameState):
 
-        
+        p0 = gameState.getPacmanPosition()[0]
+        p1 = gameState.getPacmanPosition()[1]
+        width = gameState.data.layout.width
+        height = gameState.data.layout.height
 
-        return 0
+        return p1*width + p0
 
     def getQValue(self, state, action):
 
@@ -631,6 +633,7 @@ class QLearningAgent(BustersAgent):
           you should return None.
         """
         legalActions = state.getLegalPacmanActions()
+        if 'Stop' in legalActions: legalActions.remove("Stop")
         if len(legalActions)==0:
           return None
 
