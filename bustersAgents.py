@@ -654,7 +654,7 @@ class QLearningAgent(BustersAgent):
 
         return random.choice(best_actions)
 
-    def getAction(self, state):
+    def getAction(self, gameState):
         """
           Compute the action to take in the current state.  With
           probability self.epsilon, we should take a random action and
@@ -663,25 +663,24 @@ class QLearningAgent(BustersAgent):
           should choose None as the action.
         """
 
-        state = self.computePosition(state)
+        state = self.computePosition(gameState)
         # Pick Action
-        legalActions = state.getLegalActions()
+        legalActions = gameState.getLegalActions()
         if 'Stop' in legalActions: legalActions.remove("Stop")
         action = None
 
-        if len(legalActions) == 0:
-             return action
-
         flip = util.flipCoin(self.epsilon)
-        print("llamada a getactions 1")
+
         if flip:
-            return random.choice(legalActions)
-        print("llamada a getactions 2")
+            action = random.choice(legalActions)
+        else:
+            action = self.getPolicy(state)
+
         self.update(self.previous_state, self.previous_action, state, self.reward)
 
         self.previous_state = state
         self.previous_action = action
-        return self.getPolicy(state)
+        return action
 
 
     def update(self, state, action, nextState, reward):
