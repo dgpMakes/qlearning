@@ -78,6 +78,9 @@ class BustersAgent(object):
         self.inferenceModules = [inferenceType(a) for a in ghostAgents]
         self.observeEnable = observeEnable
         self.elapseTimeEnable = elapseTimeEnable
+        self.previous_state = None
+        self.previous_action = None
+        self.reward = 0
 
     def registerInitialState(self, gameState):
         "Initializes beliefs and inference modules"
@@ -540,7 +543,7 @@ class QLearningAgent(BustersAgent):
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self,gameState)
         self.distancer = Distancer(gameState.data.layout, False)
-        self.epsilon = 0.0
+        self.epsilon = 0
         self.alpha = 0.5
         self.discount = 0.8
 
@@ -572,14 +575,11 @@ class QLearningAgent(BustersAgent):
 
     def writeQtable(self):
         "Write qtable to disc"
-        print("hola me llamo diego")
         self.table_file.seek(0)
         self.table_file.truncate()
         for line in self.q_table:
-            print("line -> " + line)
             for item in line:
                 self.table_file.write(str(item)+" ")
-                print(item)
             self.table_file.write("\n")
             
     def printQtable(self):
@@ -662,6 +662,8 @@ class QLearningAgent(BustersAgent):
           no legal actions, which is the case at the terminal state, you
           should choose None as the action.
         """
+
+        state = self.computePosition(state)
         # Pick Action
         legalActions = state.getLegalActions()
         if 'Stop' in legalActions: legalActions.remove("Stop")
@@ -671,9 +673,14 @@ class QLearningAgent(BustersAgent):
              return action
 
         flip = util.flipCoin(self.epsilon)
-
+        print("llamada a getactions 1")
         if flip:
             return random.choice(legalActions)
+        print("llamada a getactions 2")
+        self.update(self.previous_state, self.previous_action, state, self.reward)
+
+        self.previous_state = state
+        self.previous_action = action
         return self.getPolicy(state)
 
 
@@ -701,13 +708,13 @@ class QLearningAgent(BustersAgent):
 #         action_column = self.actions[action]
 #         print("Corresponding Q-table cell to update:", position, action_column)
 
-        
+        print("update llamado")
         currentValue = self.getQValue(state, action)
         nextValue = self.getValue(nextState)
         discount = self.discount
         alpha = self.alpha
 
-        
+        reward = getReward(state, action, nextState)
         result = alpha * (reward + nextValue * discount - currentValue) + currentValue
         self.q_table[self.computePosition(state)][self.actions[action]] = result
 
@@ -725,5 +732,31 @@ class QLearningAgent(BustersAgent):
 
     def getReward(self, state, action, nextState):
         "Return the obtained reward"
+        print("getreward")
+        diferencia_score = state.getScore() - nextState.getScore()
+        if diferencia_score == -1:
+            return getNearestGhostDistance(nextState) - getNearestGhostDistance(state)
+                
+        return diferencia_score
+
+    def getNearestGhostDistance(self, gameState):
+
+        pos_pacman = gameState.getPacmanPosition()
+        ghost_to_follow = 0
+        nearest_distance = 999999999999999
+
+        # Look which ghost is closer
+        for i in range(0, len(gameState.getGhostPositions())):
+            distance_to_analyze = distancer.getDistance((pos_pacman[0], pos_pacman[1]),(gameState.getGhostPositions()[i][0], gameState.getGhostPositions()[i][1]))
+            if gameState.getLivingGhosts()[i+1] and distance_to_analyze < nearest_distance:
+                ghost_to_follow = i
+                nearest_distance = distance_to_analyze
+
+        print("fantasma más cernano ->" + str(gameState.data.ghostDistances[ghost_to_follow]))
+
+        return gameState.data.ghostDistances[ghost_to_follow]
+
+
+        
 
 

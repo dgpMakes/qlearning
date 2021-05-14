@@ -735,7 +735,10 @@ class Game(object):
             if _BOINC_ENABLED:
                 boinc.set_fraction_done(self.getProgress())
         
-
+        self.table_file = open("qtable.txt", "r+")
+        self.q_table = self.agents[0].readQtable()
+        self.agents[0].__del__()
+        print("end")
 
 
         # inform a learning agent of the game result
