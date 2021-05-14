@@ -1,7 +1,7 @@
 from __future__ import print_function
 from wekaI import Weka
-import numpy
-
+import os
+import numpy as np
 # bustersAgents.py
 # ----------------
 # Licensing Information:  You are free to use or extend these projects for
@@ -9,8 +9,7 @@ import numpy
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley.
 # 
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
-# The core projects and autograders were primarily created by John DeNero
+  # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
@@ -488,7 +487,7 @@ class BasicAgentAA(BustersAgent):
         self.countActions = self.countActions + 1
         self.printInfo(gameState)
         move = Directions.STOP
-        legal = gameState.getLegalActions(0) ##Legal position from the pacman+
+        legal = gameState.getLegalActions(0) ##Legal position from the pacman
 
         distancer = Distancer(gameState.data.layout)
 
@@ -536,21 +535,25 @@ class BasicAgentAA(BustersAgent):
 
         return current_direction
 
-
 class QLearningAgent(BustersAgent):
     
-    def registerInitialState(self, gameState)
+    def registerInitialState(self, gameState):
+        BustersAgent.registerInitialState(self,gameState)
         self.distancer = Distancer(gameState.data.layout, False)
         self.epsilon = 0.0
         self.alpha = 0.5
         self.discount = 0.8
-        self.actions = {"North=":0, "East=":1, "South=":2, "West=":3}
-        if os.path.exists("qtable.txt")
+
+        if "Stop" in self.actions:
+            self.actions.remove("Stop")
+
+        self.actions = {"North":0, "East":1, "South":2, "West":3}
+        if os.path.exists("qtable.txt"):
             self.table_file = open("qtable.txt", "r+")
             self.q_table = self.readQtable()
         else:
             self.table_file = open("qtable.txt","w+")
-            self.initializeQtable(9) #argumento indica cuantos estados hay
+            self.initializeQtable(16) #argumento indica cuantos estados hay
     
     def initializeQtable(self, nrows):
         self.q_table = np.zeros(nrows,len(self.actions))
@@ -587,12 +590,11 @@ class QLearningAgent(BustersAgent):
         self.writeQtable()
         self.table_file.close()
 
-    def computePosition(self, state):
-        """
-        Compute the row of the qtable for a given state.
-        For instance, the state (3,1) is the row 7
-        """
-        return state[0]+state[1]*4
+    def computePosition(self, gameState):
+
+        
+
+        return 0
 
     def getQValue(self, state, action):
 
@@ -603,7 +605,7 @@ class QLearningAgent(BustersAgent):
         """
         position = self.computePosition(state)
         action_column = self.actions[action]
-
+        print(position,action_column)
         return self.q_table[position][action_column]
 
 
@@ -628,7 +630,7 @@ class QLearningAgent(BustersAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        legalActions = self.getLegalActions(state)
+        legalActions = state.getLegalPacmanActions()
         if len(legalActions)==0:
           return None
 
@@ -653,7 +655,8 @@ class QLearningAgent(BustersAgent):
           should choose None as the action.
         """
         # Pick Action
-        legalActions = self.getLegalActions(state)
+        legalActions = state.getLegalActions()
+        if 'Stop' in legalActions: legalActions.remove("Stop")
         action = None
 
         if len(legalActions) == 0:
@@ -691,8 +694,6 @@ class QLearningAgent(BustersAgent):
 #         print("Corresponding Q-table cell to update:", position, action_column)
 
         
-        
-        "*** YOUR CODE HERE ***"
         currentValue = self.getQValue(state, action)
         nextValue = self.getValue(nextState)
         discount = self.discount

@@ -278,12 +278,12 @@ class GameState(object):
             self.data = GameStateData(prevState.data)
             self.livingGhosts = prevState.livingGhosts[:]
             self.ghostPositions = prevState.ghostPositions[:]
-            self.numMoves = prevState.numMoves;
-            self.maxMoves = prevState.maxMoves;
+            self.numMoves = prevState.numMoves
+            self.maxMoves = prevState.maxMoves
         else: # Initial state
             self.data = GameStateData()
-            self.numMoves = 0;
-            self.maxMoves = -1;
+            self.numMoves = 0
+            self.maxMoves = -1
             self.data.ghostDistances = []
 
     def deepCopy( self ):
@@ -322,6 +322,9 @@ class GameState(object):
     def getGhostPosition( self, agentIndex ):
         if agentIndex == 0:
             raise Exception("Pacman's index passed to getGhostPosition")
+        if(self.data.agentStates[agentIndex] is None):
+            raise Exception(str(agentIndex) + " is None")
+
         return self.data.agentStates[agentIndex].getPosition()
     def getGhostDirection( self, agentIndex ):
         if agentIndex == 0:
