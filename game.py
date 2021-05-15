@@ -738,7 +738,7 @@ class Game(object):
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.agents[0].readQtable()
         self.agents[0].__del__()
-        print("end")
+        print("finished properly")
 
 
         # inform a learning agent of the game result
