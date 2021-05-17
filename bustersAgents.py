@@ -543,7 +543,7 @@ class QLearningAgent(BustersAgent):
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self,gameState)
         self.distancer = Distancer(gameState.data.layout, False)
-        self.epsilon = 0
+        self.epsilon = 0.2
         self.alpha = 0.3
         self.discount = 0.8
 
@@ -556,7 +556,7 @@ class QLearningAgent(BustersAgent):
             width = gameState.data.layout.width
             height = gameState.data.layout.height
             print(width*height)
-            self.initializeQtable(8) #argumento indica cuantos estados hay
+            self.initializeQtable(32) #argumento indica cuantos estados hay
     
     def initializeQtable(self, nrows):
         self.q_table = np.zeros((nrows,len(self.actions)))
@@ -632,25 +632,34 @@ class QLearningAgent(BustersAgent):
         if relative_x_pos < 0:
             is_at_west = True
 
+
+        action_mapper = {"North":0, "East":1, "South":2, "West":3}
+
+        result = 0
+
         if is_at_north:
             if is_at_east:
-                return 0
-            if is_at_west:
-                return 1
+                result = 0
+            elif is_at_west:
+                result = 1
             else:
-                return 2
-        if is_at_south:
+                result = 2
+        elif is_at_south:
             if is_at_east:
-                return 3
-            if is_at_west:
-                return 4
+                result = 3
+            elif is_at_west:
+                result = 4
             else:
-                return 5
-        
-        if is_at_west:
-            return 6
-        if is_at_east:
-            return 7
+                result = 5
+        elif is_at_west:
+            result = 6
+        elif is_at_east:
+            result = 7
+
+        if self.previous_action != None:
+            return result + 8 * action_mapper[self.previous_action]
+        else:
+            return result
 
 
     def getQValue(self, state, action):
@@ -713,13 +722,13 @@ class QLearningAgent(BustersAgent):
           should choose None as the action.
         """
         
-        # Pick Action
         legalActions = gameState.getLegalActions()
         if 'Stop' in legalActions: legalActions.remove("Stop")
         action = None
 
         flip = util.flipCoin(self.epsilon)
 
+        # Epsilon decide si acción random o dirigida
         if flip:
             action = random.choice(legalActions)
         else:
@@ -789,7 +798,7 @@ class QLearningAgent(BustersAgent):
                 print("reward -> 10")
                 return 10
         
-        print("reward -> " + diferencia_score)
+        # print("reward -> " + diferencia_score)
         return diferencia_score
 
     def getNearestGhostDistance(self, gameState):
