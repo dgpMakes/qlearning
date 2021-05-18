@@ -78,8 +78,6 @@ class BustersAgent(object):
         self.inferenceModules = [inferenceType(a) for a in ghostAgents]
         self.observeEnable = observeEnable
         self.elapseTimeEnable = elapseTimeEnable
-        self.previous_state = None
-        self.previous_action = None
         self.reward = 0
 
     def registerInitialState(self, gameState):
@@ -91,11 +89,11 @@ class BustersAgent(object):
         self.ghostBeliefs = [inf.getBeliefDistribution() for inf in self.inferenceModules]
         self.firstMove = True
 
-    def observationFunction(self, gameState):
-        "Removes the ghost states from the gameState"
-        agents = gameState.data.agentStates
-        gameState.data.agentStates = [agents[0]] + [None for i in range(1, len(agents))]
-        return gameState
+    # def observationFunction(self, gameState):
+    #     "Removes the ghost states from the gameState"
+    #     agents = gameState.data.agentStates
+    #     gameState.data.agentStates = [agents[0]] + [None for i in range(1, len(agents))]
+    #     return gameState
 
     def getAction(self, gameState):
         "Updates beliefs, then chooses an action based on updated beliefs."
@@ -111,7 +109,7 @@ class BustersAgent(object):
 
     def chooseAction(self, gameState):
         "By default, a BustersAgent just stops.  This should be overridden."
-        return Directions.STOP
+        return Directions.STOP 
 
 class BustersKeyboardAgent(BustersAgent, KeyboardAgent):
     "An agent controlled by the keyboard that displays beliefs about ghost positions."
@@ -144,8 +142,8 @@ class BustersKeyboardAgent(BustersAgent, KeyboardAgent):
         nearest_ghost_x_position = gameState.getGhostPositions()[nearest_ghost_index][0]
         nearest_ghost_y_position = gameState.getGhostPositions()[nearest_ghost_index][1]
 
-        print("x -> " + str(nearest_ghost_x_position))
-        print("y -> " + str(nearest_ghost_y_position))
+        #print("x -> " + str(nearest_ghost_x_position))
+        #print("y -> " + str(nearest_ghost_y_position))
 
 
         pacman_x_pos = gameState.getPacmanPosition()[0]
@@ -163,10 +161,10 @@ class BustersKeyboardAgent(BustersAgent, KeyboardAgent):
         if relative_x_pos < 0:
             is_at_west = True
 
-        print("N -> " + str(is_at_north))
-        print("S -> " + str(is_at_south))
-        print("E -> " + str(is_at_east))
-        print("W -> " + str(is_at_west))
+        #print("N -> " + str(is_at_north))
+        #print("S -> " + str(is_at_south))
+        #print("E -> " + str(is_at_east))
+        #print("W -> " + str(is_at_west))
 
         if mode == 1:
 
@@ -426,8 +424,8 @@ class BasicAgentAA(BustersAgent):
         nearest_ghost_x_position = gameState.getGhostPositions()[nearest_ghost_index][0]
         nearest_ghost_y_position = gameState.getGhostPositions()[nearest_ghost_index][1]
 
-        print("x -> " + str(nearest_ghost_x_position))
-        print("y -> " + str(nearest_ghost_y_position))
+        #print("x -> " + str(nearest_ghost_x_position))
+        #print("y -> " + str(nearest_ghost_y_position))
 
 
         pacman_x_pos = gameState.getPacmanPosition()[0]
@@ -445,10 +443,10 @@ class BasicAgentAA(BustersAgent):
         if relative_x_pos < 0:
             is_at_west = True
 
-        print("N -> " + str(is_at_north))
-        print("S -> " + str(is_at_south))
-        print("E -> " + str(is_at_east))
-        print("W -> " + str(is_at_west))
+        #print("N -> " + str(is_at_north))
+        #print("S -> " + str(is_at_south))
+        #print("E -> " + str(is_at_east))
+        #print("W -> " + str(is_at_west))
 
         if mode == 1:
 
@@ -543,7 +541,7 @@ class QLearningAgent(BustersAgent):
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self,gameState)
         self.distancer = Distancer(gameState.data.layout, False)
-        self.epsilon = 0.2
+        self.epsilon = 0.3
         self.alpha = 0.3
         self.discount = 0.8
 
@@ -556,7 +554,9 @@ class QLearningAgent(BustersAgent):
             width = gameState.data.layout.width
             height = gameState.data.layout.height
             print(width*height)
-            self.initializeQtable(32) #argumento indica cuantos estados hay
+            self.initializeQtable(8) #argumento indica cuantos estados hay
+            #self.initializeQtable(32) #argumento indica cuantos estados hay
+
     
     def initializeQtable(self, nrows):
         self.q_table = np.zeros((nrows,len(self.actions)))
@@ -613,8 +613,8 @@ class QLearningAgent(BustersAgent):
         nearest_ghost_x_position = gameState.getGhostPositions()[nearest_ghost_index][0]
         nearest_ghost_y_position = gameState.getGhostPositions()[nearest_ghost_index][1]
 
-        print("x -> " + str(nearest_ghost_x_position))
-        print("y -> " + str(nearest_ghost_y_position))
+        #print("x -> " + str(nearest_ghost_x_position))
+        #print("y -> " + str(nearest_ghost_y_position))
 
 
         pacman_x_pos = gameState.getPacmanPosition()[0]
@@ -632,30 +632,37 @@ class QLearningAgent(BustersAgent):
         if relative_x_pos < 0:
             is_at_west = True
 
-
+        result = 0
         action_mapper = {"North":0, "East":1, "South":2, "West":3}
 
-        result = 0
-
         if is_at_north:
-            if is_at_east:
+            if is_at_east: #NORESTE
+                print("state -> 0")
                 result = 0
-            elif is_at_west:
+            elif is_at_west: #NOROESTE
+                print("state -> 1")
                 result = 1
-            else:
+            else: #NORTE
+                print("state -> 2")
                 result = 2
         elif is_at_south:
             if is_at_east:
+                print("state -> 3")
                 result = 3
             elif is_at_west:
+                print("state -> 4")
                 result = 4
             else:
+                print("state -> 5")
                 result = 5
         elif is_at_west:
+            print("state -> 6")
             result = 6
         elif is_at_east:
+            print("state -> 7")
             result = 7
 
+        return result
         if self.previous_action != None:
             return result + 8 * action_mapper[self.previous_action]
         else:
@@ -698,22 +705,25 @@ class QLearningAgent(BustersAgent):
         """
         legalActions = state.getLegalPacmanActions()
         if 'Stop' in legalActions: legalActions.remove("Stop")
-        if len(legalActions)==0:
+        if len(legalActions) == 0:
           return None
 
         best_actions = [legalActions[0]]
         best_value = self.getQValue(state, legalActions[0])
+        print("\n\nChoosing the best actiion...")
         for action in legalActions:
             value = self.getQValue(state, action)
+            print(str(action) + " -> " + str(value))
             if value == best_value:
                 best_actions.append(action)
             if value > best_value:
                 best_actions = [action]
                 best_value = value
-
+        
+        print("The best action is -> " + str(best_actions))
         return random.choice(best_actions)
 
-    def getAction(self, gameState):
+    def getAction(self, currentState):
         """
           Compute the action to take in the current state.  With
           probability self.epsilon, we should take a random action and
@@ -722,27 +732,38 @@ class QLearningAgent(BustersAgent):
           should choose None as the action.
         """
         
-        legalActions = gameState.getLegalActions()
+        # Pick Action
+        legalActions = currentState.getLegalActions()
         if 'Stop' in legalActions: legalActions.remove("Stop")
         action = None
 
+        #Se decide el valor de epsilon para elegir acción aleatoria o decidida
         flip = util.flipCoin(self.epsilon)
 
-        # Epsilon decide si acción random o dirigida
         if flip:
             action = random.choice(legalActions)
         else:
-            action = self.getPolicy(gameState)
+            action = self.getPolicy(currentState)
 
-        if self.previous_state != None and self.previous_action != None:
-            self.update(self.previous_state, self.previous_action, gameState, self.reward)
+        # Una vez tenemos la mejor acción, generamos el estado sucesor
+        nextState = currentState.generateSuccessor(0, action)
+        reward = self.getReward(currentState, action, nextState)
 
-        self.previous_state = gameState
-        self.previous_action = action
+        #if self.previous_state != None and self.previous_action != None:
+        self.update(currentState, action, nextState, reward)
+        
         return action
 
 
-    def update(self, state, action, nextState, reward):
+    # def chooseAction(self, gameState):
+    #     actionToPerform = self.getAction(gameState)
+    #     nextState = self.generateSuccessor(self, actionToPerform)
+
+    #     reward = self.getReward(gameState, actionToPerform, nextState)
+    #     self.update(self, actionToPerform, nextState, reward)
+
+
+    def update(self, previousState, action, nextState, reward):
         """
         The parent class calls this to observe a
         state = action => nextState and reward transition.
@@ -761,20 +782,23 @@ class QLearningAgent(BustersAgent):
 
         """
         # TRACE for transition and position to update. Comment the following lines if you do not want to see that trace
-#         print("Update Q-table with transition: ", state, action, nextState, reward)
+#        print("Update Q-table with transition: ", state, action, nextState, reward)
 #         position = self.computePosition(state)
 #         action_column = self.actions[action]
 #         print("Corresponding Q-table cell to update:", position, action_column)
 
-        currentValue = self.getQValue(state, action)
+        currentValue = self.getQValue(previousState, action)
         nextValue = self.getValue(nextState)
         discount = self.discount
         alpha = self.alpha
 
-        reward = self.getReward(state, action, nextState)
-        result = alpha * (reward + nextValue * discount - currentValue) + currentValue
-        self.q_table[self.computePosition(state)][self.actions[action]] = result
-
+        reward = self.getReward(previousState, action, nextState)
+        print("REWARD OBTENIDO = " + str(reward))
+        result = (1 - alpha) * currentValue + alpha * (reward + discount*nextValue)
+        print("almacenar -> " + str(result))
+        self.q_table[self.computePosition(previousState)][self.actions[action]] = result
+        
+        
         # TRACE for updated q-table. Comment the following lines if you do not want to see that trace
 #         print("Q-table:")
 #         self.printQtable()
@@ -789,17 +813,28 @@ class QLearningAgent(BustersAgent):
 
     def getReward(self, state, action, nextState):
         "Return the obtained reward"
-        diferencia_score = abs(state.getScore()) - abs(nextState.getScore())
-        if diferencia_score == -1:
-            if self.getNearestGhostDistance(state) - self.getNearestGhostDistance(nextState) <= 0:
-                print("reward -> -1")
-                return -1
-            else:
-                print("reward -> 10")
-                return 10
+        # diferencia_score = abs(state.getScore()) - abs(nextState.getScore())
+        # if diferencia_score == -1:
+        #     if self.getNearestGhostDistance(state) - self.getNearestGhostDistance(nextState) <= 0:
+        #         print("reward -> -1")
+        #         return -1
+        #     else:
+        #         print("reward -> 10")
+        #         return 10
+        # else:
+        #     #return 0
+        #     print("reward -> " + str(diferencia_score))
+        #     return diferencia_score
+
         
-        # print("reward -> " + diferencia_score)
-        return diferencia_score
+
+        if (self.getNearestGhostDistance(state) - self.getNearestGhostDistance(nextState) > 0 and self.getNearestGhostDistance(nextState) is not 0):
+            #print("reward -> 10")
+            return 10
+
+        #print("reward -> " + str(nextState.getScore() - state.getScore()))
+        return (nextState.getScore() - state.getScore())
+
 
     def getNearestGhostDistance(self, gameState):
 
@@ -812,12 +847,16 @@ class QLearningAgent(BustersAgent):
             distance_to_analyze = self.distancer.getDistance((pos_pacman[0], pos_pacman[1]),(gameState.getGhostPositions()[i][0], gameState.getGhostPositions()[i][1]))
             if gameState.getLivingGhosts()[i+1] and distance_to_analyze < nearest_distance:
                 ghost_to_follow = i
+                #print("se sigue al fantasma numero "+str(i))
                 nearest_distance = distance_to_analyze
 
-        print(self.q_table)
-        print("distancia a fantasma más cercano ->" + str(gameState.data.ghostDistances[ghost_to_follow]))
+        #print(self.q_table)
+        nearest_distance = gameState.data.ghostDistances[ghost_to_follow]
+        print("distancia a fantasma más cercano ->" + str(nearest_distance))
 
-        return gameState.data.ghostDistances[ghost_to_follow]
+        to_return = nearest_distance
+
+        return 0 if to_return == None else to_return
 
 
         
